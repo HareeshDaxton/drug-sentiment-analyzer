@@ -11,14 +11,11 @@ from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from drug_sentiment.preprocessing.cleaning import clean_classical
+from drug_sentiment.preprocessing.cleaning import STOP_WORDS, clean_classical
 from drug_sentiment.preprocessing.drug_context import split_sentences
-
-# sklearn's English stop-word list contains negations, which flip sentiment; keep them as words.
-NEGATIONS = frozenset({"not", "no", "never", "nor", "cannot"})
 
 
 def first_mention_word(text: str, drug: str) -> int:
@@ -72,7 +69,7 @@ def distinctive_terms(texts: Iterable[str], labels: pd.Series, exclude: set[str]
     exclude = {token for token in exclude if re.fullmatch(r"[a-z]{2,}", token)}
     vectorizer = CountVectorizer(
         binary=True,
-        stop_words=sorted((set(ENGLISH_STOP_WORDS) - NEGATIONS) | exclude),
+        stop_words=sorted(STOP_WORDS | exclude),
         min_df=min_df,
         token_pattern=r"(?u)\b[a-z][a-z]+\b",
     )
