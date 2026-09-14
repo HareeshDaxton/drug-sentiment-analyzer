@@ -1,0 +1,53 @@
+# Single source of truth for paths and pipeline settings.
+# All relative paths are resolved against the project root (see src/drug_sentiment/config.py).
+
+project:
+  seed: 42
+  n_jobs: 4                      # 7.3 GB RAM laptop: keep parallel workers modest
+
+data:
+  raw_dir: Data/raw
+  train_file: train_F3WbcTw_1icmK82.csv
+  test_file: test_tOlRoBf_VeRQtHl.csv
+  sample_submission_file: sample_submission_Wy5x1QK.csv
+  # True record counts. The brief quotes 5,619 / 3,107, which are physical line
+  # counts: some comments contain line breaks inside a quoted field.
+  expected_train_rows: 5279
+  expected_test_rows: 2924
+  id_col: unique_hash
+  text_col: text
+  drug_col: drug
+  target_col: sentiment
+  labels:
+    0: positive
+    1: negative
+    2: neutral
+
+artifacts:
+  train_preprocessed: artifacts/preprocessed/train_preprocessed/train_preprocessed.pkl
+  test_preprocessed: artifacts/preprocessed/test_preprocessed/test_preprocessed.pkl
+  embeddings_dir: artifacts/preprocessed/embeddings
+  model_dir: artifacts/model
+  reports_dir: artifacts/reports
+  figures_dir: artifacts/reports/figures
+  submission_file: artifacts/submission/predictions.csv
+
+cv:
+  n_splits: 5
+  shuffle: true
+
+preprocessing:
+  target_token: targetdrug       # replaces the drug the row is about
+  other_token: otherdrug         # replaces every other known drug in the text
+  fuzzy_threshold: 80            # rapidfuzz ratio to accept a misspelt drug mention ("alitma" vs "alimta" = 83)
+  window_sizes: [0, 1, 2]        # sentences kept on each side of a drug mention
+  natural_window_size: 1         # window (unmasked) fed to the pretrained embedding models
+  max_window_words: 250
+  long_doc_chars: 5000           # package-insert style documents
+
+embeddings:
+  minilm_model: sentence-transformers/all-MiniLM-L6-v2
+  sentiment_model: cardiffnlp/twitter-roberta-base-sentiment-latest
+  batch_size: 16
+  max_length: 256
+  num_threads: 6
