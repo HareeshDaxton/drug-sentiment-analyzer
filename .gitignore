@@ -1,0 +1,16 @@
+# Environment
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Raw data (not redistributable) and run logs.
+# Anchored with a leading "/": on case-insensitive filesystems "Data/" would also ignore src/drug_sentiment/data/.
+/Data/
+/logs/
+
+# Heavy / regenerable artifacts (rebuild with `uv run python main.py all`)
+artifacts/**/*.pkl
+artifacts/**/*.npy
+artifacts/**/*.joblib
