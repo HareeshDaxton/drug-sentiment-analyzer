@@ -3,11 +3,11 @@
 A comment can discuss several drugs with different sentiment, and each row's label belongs to one of
 them. Cropping the text to the sentences around the target drug and masking drug names
 (target -> `targetdrug`, any other known drug -> `otherdrug`) makes the model input explicitly about
-the row's drug. It also keeps the relevant part inside a pretrained model's length limit: in ~7% of
-training rows the first mention appears after word 380.
+the row's drug. It also keeps the relevant part inside a pretrained model's length limit: in 6.9% of
+training rows the first mention comes after word 380.
 
-Everything here is row-wise. The only reference data is the list of drug names from train.csv's
-`drug` column plus a hand-written brand/generic synonym file; no labels or test data are used.
+Everything here is row-wise. The reference data is the list of drug names in train.csv's `drug`
+column plus the hand-written config/drug_synonyms.yaml; no labels and no test rows are used.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ SYNONYMS_PATH = PROJECT_ROOT / "config" / "drug_synonyms.yaml"
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|(?<=[a-z][.!?])(?=[A-Z])|\n+")
 _WORD_RE = re.compile(r"[a-z0-9][a-z0-9\-]*")
+_EDGE_PUNCTUATION = ".,;:!?()[]{}\"'"
 
 
 def normalise_drug(name: str) -> str:
@@ -34,7 +35,7 @@ def normalise_drug(name: str) -> str:
 
 
 def split_sentences(text: str) -> list[str]:
-    return [s.strip() for s in _SENTENCE_SPLIT_RE.split(text) if s and s.strip()]
+    return [sentence.strip() for sentence in _SENTENCE_SPLIT_RE.split(text) if sentence.strip()]
 
 
 def _name_pattern(name: str) -> str:
@@ -45,8 +46,8 @@ def _name_pattern(name: str) -> str:
 
 @lru_cache(maxsize=4096)
 def _alternation(names: frozenset[str]) -> re.Pattern[str]:
-    ordered = sorted(names, key=len, reverse=True)  # longest first so "meftal spas" wins over "meftal"
-    return re.compile("|".join(_name_pattern(n) for n in ordered), re.IGNORECASE)
+    ordered = sorted(names, key=len, reverse=True)  # longest first so "pemetrexed disodium" wins over "pemetrexed"
+    return re.compile("|".join(_name_pattern(name) for name in ordered), re.IGNORECASE)
 
 
 def _merge_ranges(ranges: Iterable[tuple[int, int]]) -> list[list[int]]:
@@ -80,15 +81,15 @@ def _crop_words(text: str, is_anchor: Callable[[str], bool], max_words: int) -> 
 
 
 class DrugLexicon:
-    """Known drug names plus brand/generic groups (e.g. Gilenya = fingolimod)."""
+    """Known drug names plus groups of names for the same drug (e.g. Gilenya = fingolimod)."""
 
     def __init__(self, names: Iterable[str], synonym_groups: Iterable[Iterable[str]], fuzzy_threshold: int) -> None:
         self._synonyms: dict[str, frozenset[str]] = {}
         for group in synonym_groups:
-            members = frozenset(normalise_drug(m) for m in group)
+            members = frozenset(normalise_drug(member) for member in group)
             for member in members:
                 self._synonyms[member] = self._synonyms.get(member, frozenset()) | members
-        self.all_names = frozenset(normalise_drug(n) for n in names) | frozenset(self._synonyms)
+        self.all_names = frozenset(normalise_drug(name) for name in names) | frozenset(self._synonyms)
         self.fuzzy_threshold = fuzzy_threshold
 
     @classmethod
@@ -110,9 +111,9 @@ class DrugLexicon:
             for i in range(len(words) - n_parts + 1)
             if words[i][0] == drug[0]
         }
-        candidates = {c for c in candidates if abs(len(c) - len(drug)) <= 2}
+        candidates = {candidate for candidate in candidates if abs(len(candidate) - len(drug)) <= 2}
         match = process.extractOne(drug, candidates, scorer=fuzz.ratio, score_cutoff=self.fuzzy_threshold)
-        return match[0] if match else None
+        return normalise_drug(match[0]) if match else None
 
 
 @dataclass(frozen=True)
@@ -121,7 +122,7 @@ class DrugContext:
     mention_count: int
     first_mention_pos: float  # relative character position of the first mention; -1 when not found
     n_mention_sentences: int
-    n_other_drugs: int  # distinct other molecules mentioned in the comment
+    n_other_drugs: int  # distinct other drugs mentioned in the comment
     full_masked: str
     windows_masked: dict[int, str]  # k -> mention sentences +/- k neighbours, drugs masked
     window_natural: str  # unmasked window for pretrained models
@@ -154,40 +155,49 @@ class DrugContextExtractor:
             alias = self.lexicon.find_fuzzy_alias(drug, text)
             if alias:
                 match_type = "fuzzy"
-                target_names = target_names | {alias} | self.lexicon.same_drug(alias)
+                target_names = target_names | self.lexicon.same_drug(alias) | {alias}
 
         target_re = _alternation(target_names)
-        other_re = _alternation(self.lexicon.all_names - target_names)
+        other_re = self._other_drugs_pattern(text, target_names)
 
         def mask(fragment: str) -> str:
-            return other_re.sub(self.other_token, target_re.sub(self.target_token, fragment))
+            fragment = target_re.sub(self.target_token, fragment)
+            return other_re.sub(self.other_token, fragment) if other_re else fragment
 
         mentions = list(target_re.finditer(text))
-        other_molecules = {min(self.lexicon.same_drug(m.group(0))) for m in other_re.finditer(text)}
+        other_drugs = {min(self.lexicon.same_drug(m.group(0))) for m in other_re.finditer(text)} if other_re else set()
         sentences = split_sentences(text)
         anchor_ids = [i for i, sentence in enumerate(sentences) if target_re.search(sentence)]
-
         raw_windows = {
             k: self._sentence_window(sentences, anchor_ids, k) if anchor_ids else text
             for k in {*self.window_sizes, self.natural_window_size}
         }
+
+        first_words = {name.split()[0] for name in target_names}
+
+        def is_natural_anchor(word: str) -> bool:
+            return target_re.search(word) is not None or word.lower().strip(_EDGE_PUNCTUATION) in first_words
+
         return DrugContext(
             match_type=match_type,
             mention_count=len(mentions),
             first_mention_pos=mentions[0].start() / len(text) if mentions else -1.0,
             n_mention_sentences=len(anchor_ids),
-            n_other_drugs=len(other_molecules),
+            n_other_drugs=len(other_drugs),
             full_masked=mask(text),
             windows_masked={
-                k: _crop_words(mask(raw_windows[k]), lambda w: self.target_token in w, self.max_window_words)
+                k: _crop_words(mask(raw_windows[k]), lambda word: self.target_token in word, self.max_window_words)
                 for k in self.window_sizes
             },
-            window_natural=_crop_words(
-                raw_windows[self.natural_window_size],
-                lambda w: target_re.search(w) is not None,
-                self.max_window_words,
-            ),
+            window_natural=_crop_words(raw_windows[self.natural_window_size], is_natural_anchor, self.max_window_words),
         )
+
+    def _other_drugs_pattern(self, text: str, target_names: frozenset[str]) -> re.Pattern[str] | None:
+        """Pattern for the known drugs other than the target. Only names whose first word occurs in the
+        text are compiled, which keeps the regex small and fast."""
+        lower = text.lower()
+        candidates = frozenset(name for name in self.lexicon.all_names - target_names if name.split()[0] in lower)
+        return _alternation(candidates) if candidates else None
 
     @staticmethod
     def _sentence_window(sentences: list[str], anchor_ids: list[int], k: int) -> str:
