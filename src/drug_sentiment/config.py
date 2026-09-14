@@ -34,6 +34,7 @@ class DataConfig:
 class ArtifactConfig:
     train_preprocessed: Path
     test_preprocessed: Path
+    drug_lexicon: Path
     embeddings_dir: Path
     model_dir: Path
     reports_dir: Path
