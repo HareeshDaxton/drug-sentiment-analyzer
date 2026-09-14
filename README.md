@@ -17,6 +17,12 @@ Place the competition files in `Data/raw/`:
 | Stage | Command | Output |
 |---|---|---|
 | Ingest & validate | `uv run python main.py ingest` | log of record counts and validation checks |
+| Preprocess | `uv run python main.py preprocess` | `artifacts/preprocessed/` train and test pkl files, drug lexicon |
+
+The preprocessed pkl files hold only row-wise outputs: cleaned text, drug-centred windows with the target
+drug masked as `targetdrug` and other drugs as `otherdrug`, drug-mention and handcrafted features, and (train
+only) the label and a CV `fold` column. Anything fitted on data (TF-IDF, scaling, encoders) happens later
+inside each model pipeline, so the files are safe to reuse for every model and fold.
 
 Run tests with `uv run pytest`.
 
