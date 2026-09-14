@@ -1,0 +1,38 @@
+# Drug Sentiment Analysis
+
+Analytics Vidhya Blackbelt capstone: predict the sentiment of a patient comment **toward a specific drug**
+(0 = positive, 1 = negative, 2 = neutral). Metric: weighted F1.
+
+## Setup
+
+```bash
+uv sync
+```
+
+Place the competition files in `Data/raw/`:
+`train_F3WbcTw_1icmK82.csv`, `test_tOlRoBf_VeRQtHl.csv`, `sample_submission_Wy5x1QK.csv`.
+
+## Pipeline stages
+
+| Stage | Command | Output |
+|---|---|---|
+| Ingest & validate | `uv run python main.py ingest` | log of record counts and validation checks |
+
+Run tests with `uv run pytest`.
+
+## Project layout
+
+```
+config/config.yaml        paths and pipeline settings
+src/drug_sentiment/       package: data, preprocessing, features, models, ...
+main.py                   stage runner
+tests/                    pytest suite
+artifacts/                preprocessed pkl files, models, reports, submission
+NoteBook/                 exploration notebooks
+```
+
+## Data note
+
+The brief quotes 5,619 train / 3,107 test rows. Those are physical line counts: some comments contain line
+breaks inside a quoted CSV field. The files hold **5,279** and **2,924** records, and `sample_submission`
+has 2,924 ids in test order, so the submission has 2,924 rows.
