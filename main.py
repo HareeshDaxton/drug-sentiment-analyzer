@@ -16,8 +16,15 @@ def run_ingest() -> None:
     load_raw_data()
 
 
+def run_preprocess() -> None:
+    from drug_sentiment.preprocessing.build import run_preprocessing
+
+    run_preprocessing()
+
+
 STAGES: dict[str, Callable[[], None]] = {
     "ingest": run_ingest,
+    "preprocess": run_preprocess,
 }
 
 
