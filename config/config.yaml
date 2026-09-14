@@ -26,6 +26,7 @@ data:
 artifacts:
   train_preprocessed: artifacts/preprocessed/train_preprocessed/train_preprocessed.pkl
   test_preprocessed: artifacts/preprocessed/test_preprocessed/test_preprocessed.pkl
+  drug_lexicon: artifacts/preprocessed/drug_lexicon.pkl
   embeddings_dir: artifacts/preprocessed/embeddings
   model_dir: artifacts/model
   reports_dir: artifacts/reports
