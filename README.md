@@ -20,6 +20,11 @@ Place the competition files in `Data/raw/`:
 
 Run tests with `uv run pytest`.
 
+## Exploratory analysis
+
+[`NoteBook/01_EDA.ipynb`](NoteBook/01_EDA.ipynb) explores the data and records the modelling decision each finding
+leads to. Its 9 figures are saved to `artifacts/reports/figures/` for the presentation.
+
 ## Project layout
 
 ```
