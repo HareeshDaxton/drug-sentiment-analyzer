@@ -40,6 +40,7 @@ class ArtifactConfig:
     reports_dir: Path
     figures_dir: Path
     submission_file: Path
+    presentation_file: Path
 
 
 @dataclass(frozen=True)
@@ -62,7 +63,6 @@ class PreprocessingConfig:
 @dataclass(frozen=True)
 class EmbeddingConfig:
     minilm_model: str
-    sentiment_model: str
     batch_size: int
     max_length: int
     num_threads: int
