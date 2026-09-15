@@ -25,6 +25,7 @@ dependencies = [
     "transformers>=5.17.0",
     "vadersentiment>=3.3.2",
     "wordcloud>=1.9.6",
+    "xgboost>=3.4.1",
 ]
 
 [build-system]
