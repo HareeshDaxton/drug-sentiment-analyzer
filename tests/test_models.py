@@ -10,7 +10,8 @@ from drug_sentiment.models.train import ESTIMATORS, build_pipeline, validate_sub
 def make_frame(n: int = 40, seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     words = ["good", "bad", "pain", "relief", "targetdrug", "worse", "better", "news", "trial", "not"]
-    frame = pd.DataFrame({"ctx_k1": [" ".join(rng.choice(words, size=8)) for _ in range(n)]})
+    frame = pd.DataFrame({"ctx_k0": [" ".join(rng.choice(words, size=8)) for _ in range(n)],
+                          "ctx_k1": [" ".join(rng.choice(words, size=8)) for _ in range(n)]})
     for column in COUNT_FEATURES:
         frame[column] = rng.integers(0, 20, n)
     for column in SCALED_FEATURES:
