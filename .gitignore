@@ -16,3 +16,5 @@ artifacts/**/*.npy
 artifacts/**/*.joblib
 
 .claude/
+# Built submission bundle (rebuild with `main.py package`)
+/submission/
