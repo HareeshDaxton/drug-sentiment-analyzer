@@ -113,6 +113,9 @@ are steadier with it (0.004 vs 0.008 standard deviation), but the honest reading
 
 Predicted mix on `test.csv`: 76.2% neutral, 15.1% negative, 8.7% positive (training mix: 72.5 / 15.9 / 11.7).
 
+The pipeline was re-run from the raw CSVs end to end (`ingest → preprocess → train → predict`) and reproduced
+`predictions.csv` byte for byte, so the numbers above are reproducible rather than the residue of one lucky session.
+
 ## Deliverables
 
 | File | What it is |
