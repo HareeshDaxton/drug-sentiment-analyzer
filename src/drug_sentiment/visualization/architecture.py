@@ -18,7 +18,7 @@ from drug_sentiment.visualization.style import (
 
 STAGES = [
     ("raw CSVs", ["train 5,279 rows", "test 2,924 rows", "(drug, comment)"]),
-    ("preprocess", ["clean text", "find the drug", "window +/- 1 sentence", "mask targetdrug /", "otherdrug",
+    ("preprocess", ["clean text", "find the drug", "keep its sentences", "mask targetdrug /", "otherdrug",
                     "handcrafted + VADER"]),
     ("embed", ["MiniLM, frozen", "384-d vector", "of the window"]),
     ("features", ["TF-IDF word + char", "log-scaled counts", "one-hot drug", "+ MiniLM"]),
