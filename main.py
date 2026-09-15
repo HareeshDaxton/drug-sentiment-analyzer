@@ -22,10 +22,55 @@ def run_preprocess() -> None:
     run_preprocessing()
 
 
+def run_embed() -> None:
+    from drug_sentiment.features.embeddings import run_embeddings
+
+    run_embeddings()
+
+
+def run_train() -> None:
+    from drug_sentiment.models.train import run_training
+
+    run_training()
+
+
+def run_evaluate() -> None:
+    from drug_sentiment.models.evaluate import run_evaluation
+
+    run_evaluation()
+
+
+def run_predict() -> None:
+    from drug_sentiment.models.train import run_prediction
+
+    run_prediction()
+
+
+def run_slides() -> None:
+    from drug_sentiment.reporting.build_ppt import build_deck
+
+    build_deck()
+
+
+def run_package() -> None:
+    from drug_sentiment.reporting.package import build_archive
+
+    build_archive()
+
+
 STAGES: dict[str, Callable[[], None]] = {
     "ingest": run_ingest,
     "preprocess": run_preprocess,
+    "embed": run_embed,
+    "train": run_train,
+    "evaluate": run_evaluate,
+    "predict": run_predict,
+    "slides": run_slides,
+    "package": run_package,
 }
+
+# `all` rebuilds the submission from the raw CSVs; the deck and the zip are built on demand, after it.
+PIPELINE_STAGES = ["ingest", "preprocess", "embed", "train", "evaluate", "predict"]
 
 
 def main() -> None:
@@ -34,7 +79,7 @@ def main() -> None:
     args = parser.parse_args()
 
     set_seed(get_config().seed)
-    for name in STAGES if args.stage == "all" else [args.stage]:
+    for name in PIPELINE_STAGES if args.stage == "all" else [args.stage]:
         logger.info("===== Stage: %s =====", name)
         STAGES[name]()
 
