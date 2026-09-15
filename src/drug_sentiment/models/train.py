@@ -46,9 +46,9 @@ MODEL_CARD_FILE = "model_card.json"
 MAIN_MODEL_CONFIG: dict = {
     "model": "LinearSVC",
     "estimator": "LinearSVC",
-    "params": {"C": 0.0847, "class_weight": "balanced", "max_iter": 20000},  # C tuned by Optuna
+    "params": {"C": 0.05, "class_weight": "balanced", "max_iter": 20000},
     "representation": "sparse",
-    "text_column": "ctx_k1",
+    "text_column": "ctx_k0",  # the evaluate stage's window search chose the tightest window
     "sample_weight": False,
 }
 
