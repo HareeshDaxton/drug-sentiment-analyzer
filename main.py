@@ -40,6 +40,12 @@ def run_evaluate() -> None:
     run_evaluation()
 
 
+def run_window_search() -> None:
+    from drug_sentiment.models.evaluate import run_window_search as search
+
+    search()
+
+
 def run_predict() -> None:
     from drug_sentiment.models.train import run_prediction
 
@@ -64,6 +70,7 @@ STAGES: dict[str, Callable[[], None]] = {
     "embed": run_embed,
     "train": run_train,
     "evaluate": run_evaluate,
+    "window-search": run_window_search,
     "predict": run_predict,
     "slides": run_slides,
     "package": run_package,
