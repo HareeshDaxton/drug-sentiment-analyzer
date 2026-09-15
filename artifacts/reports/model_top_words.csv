@@ -1,0 +1,37 @@
+sentiment,word,weight
+positive,news targetdrug,0.40621670312497726
+positive,news,0.39470944040355566
+positive,february,0.3683731580490401
+positive,remission,0.36214262666220803
+positive,response,0.35953682868552306
+positive,does targetdrug,0.3386748701535245
+positive,scan,0.3298863212847183
+positive,advised,0.3191832858742388
+positive,glad,0.31587718789113345
+positive,great,0.3100731474951592
+positive,clinical trial,0.30899198661966787
+positive,targetdrug working,0.30520788987939784
+negative,targetdrug not,0.5980606387546151
+negative,not,0.511121024725147
+negative,infections,0.43694108241737406
+negative,otherdrug azathioprine,0.43323011440021314
+negative,targetdrug did,0.3980952815883645
+negative,stop,0.38464943722527256
+negative,effect,0.3633051343122767
+negative,targetdrug expensive,0.3602284777561673
+negative,response targetdrug,0.3392230574228031
+negative,worse,0.3319503480922098
+negative,not available,0.3295304793771026
+negative,pain,0.3257878407331633
+neutral,hope,0.2206727683365543
+neutral,rituxan,0.19108668564442421
+neutral,neuro,0.18326115208271354
+neutral,heard,0.16282942371715994
+neutral,taking targetdrug,0.15989086227508756
+neutral,different,0.15531532181841237
+neutral,trying targetdrug,0.15427150830307962
+neutral,mentioned,0.15102228358378775
+neutral,trying,0.15021702788243776
+neutral,similar,0.14347155501193842
+neutral,offered,0.1401205968484674
+neutral,chemo,0.1380025867853936
