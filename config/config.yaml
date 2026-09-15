@@ -32,6 +32,7 @@ artifacts:
   reports_dir: artifacts/reports
   figures_dir: artifacts/reports/figures
   submission_file: artifacts/submission/predictions.csv
+  presentation_file: presentation/Drug_Sentiment_Capstone.pptx
 
 cv:
   n_splits: 5
@@ -48,7 +49,6 @@ preprocessing:
 
 embeddings:
   minilm_model: sentence-transformers/all-MiniLM-L6-v2
-  sentiment_model: cardiffnlp/twitter-roberta-base-sentiment-latest
   batch_size: 16
   max_length: 256
   num_threads: 6
