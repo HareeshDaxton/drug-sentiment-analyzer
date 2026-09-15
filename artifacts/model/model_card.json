@@ -2,20 +2,20 @@
   "model": "LinearSVC",
   "estimator": "LinearSVC",
   "params": {
-    "C": 0.08468008575248333,
+    "C": 0.05,
     "class_weight": "balanced",
     "max_iter": 20000
   },
   "representation": "sparse",
-  "text_column": "ctx_k1",
+  "text_column": "ctx_k0",
   "cv_metrics": {
-    "accuracy": 0.7315779503693881,
-    "f1_weighted": 0.7273618243711768,
-    "f1_macro": 0.5716574353824081,
-    "recall_macro": 0.5647253129228819,
-    "roc_auc_ovr": 0.7835212038999769
+    "accuracy": 0.7389657132032582,
+    "f1_weighted": 0.7353254980523776,
+    "f1_macro": 0.5862956754319434,
+    "recall_macro": 0.5796141701463507,
+    "roc_auc_ovr": 0.7969574638070342
   },
-  "fold_f1_std": 0.004311836858464202,
+  "fold_f1_std": 0.0037615805232105275,
   "selection": {
     "screened_models": [
       "LogisticRegression",
@@ -41,16 +41,23 @@
       "LogisticRegression": 12
     },
     "rule": "highest out-of-fold weighted F1; ties within one fold std broken by macro F1, then fit time",
-    "rule_pick": "LinearSVC"
+    "rule_pick": "LinearSVC",
+    "window": {
+      "rule": "highest out-of-fold weighted F1 with C re-tuned per window, so no window is judged on another's C",
+      "searched": "ctx_k0 / ctx_k1 / ctx_k2 x C in (0.03, 0.05, 0.0847, 0.15, 0.3)",
+      "table": "artifacts/reports/window_c_search.csv",
+      "chosen": "ctx_k0 with C=0.05",
+      "note": "the experiments notebook screened and tuned on ctx_k1; the evaluate stage's ablation showed the tighter window scores higher, and this search confirmed it with C re-tuned"
+    }
   },
   "trained_rows": 5279,
-  "n_features": 68475,
+  "n_features": 48988,
   "class_counts": {
     "0": 617,
     "1": 837,
     "2": 3825
   },
-  "fit_seconds": 17,
+  "fit_seconds": 10,
   "seed": 42,
-  "trained_at": "2026-09-15T09:10:46"
+  "trained_at": "2026-09-15T09:50:27"
 }
