@@ -27,6 +27,7 @@ Place the competition files in `Data/raw/`:
 | Embed | `uv run python main.py embed` | `artifacts/preprocessed/embeddings/` MiniLM sentence-embedding pkl files |
 | Train | `uv run python main.py train` | `artifacts/model/best_model.pkl` and `model_card.json` |
 | Evaluate | `uv run python main.py evaluate` | out-of-fold report, error analysis and ablation tables in `artifacts/reports/` |
+| Window search | `uv run python main.py window-search` | `artifacts/reports/window_c_search.csv`: each drug window with `C` re-tuned |
 | Predict | `uv run python main.py predict` | `artifacts/submission/predictions.csv`, checked against the sample submission |
 | Slides | `uv run python main.py slides` | `presentation/Drug_Sentiment_Capstone.pptx` |
 | Package | `uv run python main.py package` | `submission/Drug_Sentiment_Capstone_submission.zip` |
@@ -46,7 +47,8 @@ uv run python -m drug_sentiment.inference.predict --csv comments.csv --out score
 1. **Clean** the comment (HTML, URLs — keeping the words in the path, encoding junk, contractions).
 2. **Find the drug** with a lexicon of the training drug names plus `config/drug_synonyms.yaml`, and rapidfuzz for
    misspellings (`stellara` → `stelara`).
-3. **Window**: keep the sentences that mention the drug, plus one on each side, capped at 250 words.
+3. **Window**: keep the sentences that mention the drug, capped at 250 words. The preprocess stage also
+   stores wider windows (±1 and ±2 sentences); which one ships was decided by measurement, below.
 4. **Mask**: the row's drug becomes `targetdrug`, every other known drug `otherdrug`.
 5. **Features**: mention count and position, other drugs, lengths, negations, first-person words, VADER scores.
 6. **Embed** the unmasked window with frozen MiniLM (384-d).
@@ -71,19 +73,45 @@ main model: the `train`, `evaluate` and `predict` stages read it. Screening and 
 
 ## Results
 
-The main model is a tuned **LinearSVC** (`C = 0.085`, `class_weight="balanced"`) on 68,475 sparse features built
-from the drug window. All scores below are out of fold on the 5,279 training rows, over the 5 stored folds.
+The main model is a **LinearSVC** (`C = 0.05`, `class_weight="balanced"`) on 48,988 sparse features built from the
+drug window. All scores are out of fold on the 5,279 training rows, over the 5 stored folds.
 
 | | Weighted F1 | Macro F1 | Accuracy |
 |---|---|---|---|
 | Always predict neutral | 0.609 | 0.280 | 0.725 |
-| Best of the other nine screened models (XGBoost) | 0.715 | 0.524 | - |
-| **LinearSVC — shipped** | **0.727** | **0.572** | **0.732** |
+| Best of the other nine screened models (XGBoost, tuned) | 0.715 | 0.524 | - |
+| **LinearSVC — shipped** | **0.735** | **0.586** | **0.739** |
 
-Spread across the 5 folds: 0.004 weighted F1, so the ranking is not fold noise. Fitting the final model on all
-5,279 rows takes 17 seconds on a laptop CPU.
+Per class: neutral F1 0.836 (recall 85%), negative 0.521 (52%), positive 0.402 (38%). Most mistakes are minority
+rows predicted neutral, which is what the imbalance makes hardest. Spread across the 5 folds is 0.004 weighted F1,
+so the ranking is not fold noise. Fitting on all 5,279 rows takes 10 seconds on a laptop CPU.
 
-Predicted mix on `test.csv`: 76.7% neutral, 14.4% negative, 8.8% positive (training mix: 72.5 / 15.9 / 11.7).
+**What each decision is worth** (same model, same folds, one thing changed at a time —
+`artifacts/reports/ablation_scores.csv`):
+
+| Change | Weighted F1 | Macro F1 |
+|---|---|---|
+| Whole comment, drug-blind | 0.724 | 0.567 |
+| Whole comment, drugs masked | 0.723 | 0.564 |
+| Window ±1 sentence | 0.726 | 0.569 |
+| Window ±2 sentences | 0.725 | 0.568 |
+| **Mention sentences only — shipped** | **0.735** | **0.586** |
+| TF-IDF only | 0.710 | 0.521 |
+| + handcrafted + VADER | 0.732 | 0.577 |
+| + drug identity (one-hot) | 0.725 | 0.565 |
+| Everything except the drug one-hot | 0.737 | 0.588 |
+| No class weights | 0.702 | 0.472 |
+
+The experiments notebook screened and tuned every model on the ±1 window; the evaluation stage then measured the
+window itself, and the tighter one won. `main.py window-search` re-tuned `C` for each window so none was judged on
+another's regularisation, and `ctx_k0` with `C = 0.05` came top — that is what ships.
+
+The MiniLM embeddings are worth about +0.011 weighted F1 and the class weights +0.033 (and +0.114 macro F1). The
+drug one-hot is the one block that does not pay for itself: dropping it scores 0.737 against 0.735, a difference
+inside the fold spread. It is kept because it is the only place the model can learn a per-drug prior, and the folds
+are steadier with it (0.004 vs 0.008 standard deviation), but the honest reading is that it does nothing much.
+
+Predicted mix on `test.csv`: 76.2% neutral, 15.1% negative, 8.7% positive (training mix: 72.5 / 15.9 / 11.7).
 
 ## Deliverables
 
