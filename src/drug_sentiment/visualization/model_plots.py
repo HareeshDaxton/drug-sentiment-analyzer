@@ -46,6 +46,7 @@ def plot_model_comparison(table: pd.DataFrame, baseline_f1: float, title: str, s
                 va="center", fontsize=8.5, color=INK_SECONDARY)
     ax.set_yticks(y, table.index)
     ax.set_ylim(-1, len(table) - 0.4)
+    ax.set_xlim(left=table["cv_f1_weighted"].min() - 0.07)  # room for the value label of the lowest bar
     ax.set_xlabel("Weighted F1")
     ax.spines["left"].set_visible(False)
     ax.grid(axis="x", color=GRIDLINE, linewidth=1)
